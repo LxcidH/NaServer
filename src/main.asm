@@ -29,6 +29,10 @@ section .data
     mime_js_len equ $-mime_js
     mime_unk    db "Content-Type: text/plain", 0x0D, 0x0A, 0x0D, 0x0A
     mime_unk_len equ $-mime_unk
+    mime_png    db "Content-Type: image/png", 0x0D, 0x0A, 0x0D, 0x0A
+    mime_png_len equ $-mime_png
+    mime_jpeg   db "Content-Type: image/jpeg", 0x0D, 0x0A, 0x0D, 0x0A
+    mime_jpeg_len equ $-mime_jpeg
 
     
     ; The sockaddr_in struct (16 bytes)
@@ -172,10 +176,18 @@ check_extension:
     cmp byte [rax + 1], 'c'
     je type_css
 
-    cmp byte [rax + 1], 'j'
-    je type_js
+    cmp byte [rax + 1], 'p'
+    je type_png
 
-    jmp type_unknown
+    cmp word [rax + 1], 'jp'
+    je type_jpeg
+
+    cmp word [rax + 1], 'js'
+    jne type_unknown
+    cmp byte [rax + 3], 0
+    jne type_unknown
+
+    jmp type_js
 
 type_html:
     mov r13, mime_html
@@ -195,6 +207,16 @@ type_js:
 type_unknown:
     mov r13, mime_unk
     mov r14, mime_unk_len
+    jmp send_response
+
+type_png:
+    mov r13, mime_png
+    mov r14, mime_png_len
+    jmp send_response
+
+type_jpeg:
+    mov r13, mime_jpeg
+    mov r14, mime_jpeg_len
     jmp send_response
 
 send_response:
@@ -235,6 +257,7 @@ close_file:
     mov rax, 3
     mov rdi, r15
     syscall
+    jmp close_socket
 
 handle_404:
     ; Send 404 header
