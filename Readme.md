@@ -16,4 +16,4 @@ This will build the NaServer binary and symlink it to the path on the right, to 
 
 Go to a directory containing HTML/CSS/JS files and run:
 `NaServer`
-This defaults to "localhost:8080" although this can be change in the src/main.asm file.
+This defaults to "localhost:8080" although this can be changed in the src/main.asm file.
