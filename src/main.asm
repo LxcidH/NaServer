@@ -11,6 +11,10 @@ section .data
     delimiter: db ' '
     index_html_str: db "index.html", 0
 
+    log_prefix db "[LOG] REQUEST: ", 0
+    log_prefix_len equ $-log_prefix
+    newline db 0x0A
+
     http_ok db "HTTP/1.1 200 OK", 0x0D, 0x0A
     http_ok_len equ $-http_ok
 
@@ -125,6 +129,32 @@ found_end:
     mov [FILENAME_END], rbx
 
     sub rbx, [FILENAME_START]
+
+    ; Print prefix
+    push rbx        ; Save the filename len
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, log_prefix
+    mov rdx, log_prefix_len
+    syscall
+
+    ; Print the file name
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, [FILENAME_START]
+    pop rbx
+    mov rdx, rbx
+    push rbx
+    syscall
+
+    ; Print newline
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, newline
+    mov rdx, 1
+    syscall
+
+    pop rbx     ; Restore filename len
 
     cmp rbx, 1
     je single_char
