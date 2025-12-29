@@ -14,6 +14,12 @@ section .data
     http_ok db "HTTP/1.1 200 OK", 0x0D, 0x0A
     http_ok_len equ $-http_ok
 
+    http_404 db "HTTP/1.1 404 NOT FOUND", 0x0D, 0x0A
+    http_404_len equ $-http_404
+
+    msg_404 db "<html><body><h1 style='color:red'>404: FILE NOT FOUND</h1></body></html>"
+    msg_404_len equ $-msg_404
+
     ; MIME types labels
     mime_html   db "Content-Type: text/html", 0x0D, 0x0A, 0x0D, 0x0A
     mime_html_len equ $-mime_html
@@ -135,7 +141,7 @@ do_open:
     syscall
 
     cmp rax, 0
-    jl close_socket
+    jl handle_404
 
     ; Save file FD
     mov r15, rax 
@@ -229,6 +235,23 @@ close_file:
     mov rax, 3
     mov rdi, r15
     syscall
+
+handle_404:
+    ; Send 404 header
+    mov rax, 1
+    mov rdi, [accept_fd]
+    mov rsi, http_404
+    mov rdx, http_404_len
+    syscall
+
+    ; Send 404 html body
+    mov rax, 1
+    mov rdi, [accept_fd]
+    mov rsi, msg_404
+    mov rdx, msg_404_len
+    syscall
+
+    jmp close_socket
 
 close_socket:
     mov rax, 3
